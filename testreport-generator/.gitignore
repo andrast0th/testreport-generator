@@ -1,0 +1,4 @@
+/target/
+/.classpath
+/.project
+/TEST-com.hpe.junit.testreport.generator.AppTest.xml
