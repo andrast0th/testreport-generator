@@ -105,7 +105,13 @@ public class App {
             transformer.transform(source, result);
 
             // Output to console for testing
-            System.out.println("File saved!");
+            if (resultXmlFolder != null && !resultXmlFolder.trim().isEmpty()) {
+                System.out.println("File saved to location: " + resultXmlFolder + "TEST-" + SUITE_CLASS_NAME + ".xml");
+            } else {
+                if (!resultXmlFolder.trim().isEmpty()) {
+                    System.out.println("File saved to wd: " + "TEST-" + SUITE_CLASS_NAME + ".xml");
+                }
+            }
             result = new StreamResult(System.out);
             transformer.transform(source, result);
 
