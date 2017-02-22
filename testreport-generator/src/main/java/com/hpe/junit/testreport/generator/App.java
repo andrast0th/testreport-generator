@@ -92,6 +92,10 @@ public class App {
                 rootElement.appendChild(createTestElement(doc, TestResult.FAILED, index + 1, perTestDuration));
             });
 
+            IntStream.range(0, skippedTestCount).forEach(index -> {
+                rootElement.appendChild(createTestElement(doc, TestResult.SKIPPED, index + 1, perTestDuration));
+            });
+
             // write the content into xml file
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
             Transformer transformer;
@@ -131,6 +135,11 @@ public class App {
             failure.setAttribute("type", "junit.framework.AssertionFailedError");
             failure.setTextContent("Assert failed, beacuse it was supposed to");
             element.appendChild(failure);
+        }
+
+        if (TestResult.SKIPPED == testResult) {
+            Element skipped = doc.createElement("skipped");
+            element.appendChild(skipped);
         }
 
         return element;
