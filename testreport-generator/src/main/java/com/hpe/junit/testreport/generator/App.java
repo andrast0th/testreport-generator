@@ -1,6 +1,8 @@
 package com.hpe.junit.testreport.generator;
 
 import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -34,6 +36,7 @@ public class App {
         final Options options = new Options();
 
         options
+                .addOption(Option.builder().argName("order").longOpt("order").desc("ex: passed,failed,skipped").hasArg().build())
                 .addOption(Option.builder().argName("failedTestCount").longOpt("failedTestCount").required().hasArg().build())
                 .addOption(Option.builder().argName("passedTestCount").longOpt("passedTestCount").required().hasArg().build())
                 .addOption(Option.builder().argName("skippedTestCount").longOpt("skippedTestCount").required().hasArg().build())
@@ -63,6 +66,22 @@ public class App {
         double perTestDuration = testDuration / (failedTestCount + passedTestCount);
         String resultXmlFolder = line.getOptionValue("resultXmlFolder", "");
 
+        TestResult[] order;
+
+        if (line.hasOption("order")) {
+            String paramOrderString = line.getOptionValue("order");
+            String[] separated = paramOrderString.split(",");
+
+            List<TestResult> orderList = new ArrayList<>();
+            for (String testResultString : separated) {
+                TestResult testResult = TestResult.valueOf(testResultString.toUpperCase());
+                orderList.add(testResult);
+            }
+            order = orderList.toArray(new TestResult[] {});
+        } else {
+            order = new TestResult[] { TestResult.PASSED, TestResult.FAILED, TestResult.SKIPPED };
+        }
+
         try {
 
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -85,19 +104,23 @@ public class App {
 
             Integer testIndex = 1;
 
-            for (int i = 0; i < passedTestCount; i++) {
-                rootElement.appendChild(createTestElement(doc, TestResult.PASSED, testIndex, perTestDuration));
-                testIndex += 1;
-            }
-
-            for (int i = 0; i < failedTestCount; i++) {
-                rootElement.appendChild(createTestElement(doc, TestResult.FAILED, testIndex, perTestDuration));
-                testIndex += 1;
-            }
-
-            for (int i = 0; i < skippedTestCount; i++) {
-                rootElement.appendChild(createTestElement(doc, TestResult.SKIPPED, testIndex, perTestDuration));
-                testIndex += 1;
+            for (TestResult testResult : order) {
+                int count = 0;
+                switch (testResult) {
+                    case PASSED:
+                        count = passedTestCount;
+                        break;
+                    case FAILED:
+                        count = failedTestCount;
+                        break;
+                    case SKIPPED:
+                        count = skippedTestCount;
+                        break;
+                }
+                for (int i = 0; i < count; i++) {
+                    rootElement.appendChild(createTestElement(doc, testResult, testIndex, perTestDuration));
+                    testIndex += 1;
+                }
             }
 
             // write the content into xml file
