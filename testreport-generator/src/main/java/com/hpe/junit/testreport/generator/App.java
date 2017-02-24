@@ -1,7 +1,6 @@
 package com.hpe.junit.testreport.generator;
 
 import java.io.File;
-import java.util.stream.IntStream;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -84,17 +83,22 @@ public class App {
             Element properties = doc.createElement("properties");
             rootElement.appendChild(properties);
 
-            IntStream.range(0, passedTestCount).forEach(index -> {
-                rootElement.appendChild(createTestElement(doc, TestResult.PASSED, index + 1, perTestDuration));
-            });
+            Integer testIndex = 1;
 
-            IntStream.range(0, failedTestCount).forEach(index -> {
-                rootElement.appendChild(createTestElement(doc, TestResult.FAILED, index + 1, perTestDuration));
-            });
+            for (int i = 0; i < passedTestCount; i++) {
+                rootElement.appendChild(createTestElement(doc, TestResult.PASSED, testIndex, perTestDuration));
+                testIndex += 1;
+            }
 
-            IntStream.range(0, skippedTestCount).forEach(index -> {
-                rootElement.appendChild(createTestElement(doc, TestResult.SKIPPED, index + 1, perTestDuration));
-            });
+            for (int i = 0; i < failedTestCount; i++) {
+                rootElement.appendChild(createTestElement(doc, TestResult.FAILED, testIndex, perTestDuration));
+                testIndex += 1;
+            }
+
+            for (int i = 0; i < skippedTestCount; i++) {
+                rootElement.appendChild(createTestElement(doc, TestResult.SKIPPED, testIndex, perTestDuration));
+                testIndex += 1;
+            }
 
             // write the content into xml file
             TransformerFactory transformerFactory = TransformerFactory.newInstance();
