@@ -25,7 +25,7 @@ import org.w3c.dom.Element;
 
 public class App {
 
-    public static final String SUITE_CLASS_NAME = "com.hpe.junit.testreport.generator.AppTest";
+    public static String suite_class_name = "com.hpe.junit.testreport.generator.AppTest";
 
     public static enum TestResult {
         FAILED, PASSED, SKIPPED
@@ -37,10 +37,41 @@ public class App {
 
         options
                 .addOption(Option.builder().argName("order").longOpt("order").desc("ex: passed,failed,skipped").hasArg().build())
-                .addOption(Option.builder().argName("failedTestCount").longOpt("failedTestCount").required().hasArg().build())
-                .addOption(Option.builder().argName("passedTestCount").longOpt("passedTestCount").required().hasArg().build())
-                .addOption(Option.builder().argName("skippedTestCount").longOpt("skippedTestCount").required().hasArg().build())
-                .addOption(Option.builder().argName("testDuration").longOpt("testDuration").required().hasArg().build())
+
+                .addOption(Option.builder()
+                        .argName("suiteClassName")
+                        .longOpt("suiteClassName")
+                        .desc("ex: com.hpe.junit.testreport.generator.AppTest")
+                        .hasArg().build())
+
+                .addOption(Option.builder()
+                        .argName("failedTestCount")
+                        .longOpt("failedTestCount")
+                        .required()
+                        .hasArg()
+                        .build())
+
+                .addOption(Option.builder()
+                        .argName("passedTestCount")
+                        .longOpt("passedTestCount")
+                        .required()
+                        .hasArg()
+                        .build())
+
+                .addOption(Option.builder()
+                        .argName("skippedTestCount")
+                        .longOpt("skippedTestCount")
+                        .required()
+                        .hasArg()
+                        .build())
+
+                .addOption(Option.builder()
+                        .argName("testDuration")
+                        .longOpt("testDuration")
+                        .required()
+                        .hasArg()
+                        .build())
+
                 .addOption(Option.builder().argName("resultXmlFolder")
                         .longOpt("resultXmlFolder")
                         .desc("Make sure to add a / at the end")
@@ -65,6 +96,10 @@ public class App {
         double testDuration = Double.valueOf(line.getOptionValue("testDuration"));
         double perTestDuration = testDuration / (failedTestCount + passedTestCount);
         String resultXmlFolder = line.getOptionValue("resultXmlFolder", "");
+
+        if (line.hasOption("suiteClassName")) {
+            suite_class_name = line.getOptionValue("suiteClassName");
+        }
 
         TestResult[] order;
 
@@ -91,7 +126,7 @@ public class App {
             // root elements
             Element rootElement = doc.createElement("testsuite");
             doc.appendChild(rootElement);
-            rootElement.setAttribute("name", SUITE_CLASS_NAME);
+            rootElement.setAttribute("name", suite_class_name);
             rootElement.setAttribute("tests", failedTestCount + passedTestCount + skippedTestCount + "");
             rootElement.setAttribute("failures", failedTestCount + "");
             rootElement.setAttribute("errors", 0 + "");
@@ -132,15 +167,15 @@ public class App {
             transformer.setOutputProperty(OutputKeys.INDENT, "yes");
 
             DOMSource source = new DOMSource(doc);
-            StreamResult result = new StreamResult(new File(resultXmlFolder + "TEST-" + SUITE_CLASS_NAME + ".xml"));
+            StreamResult result = new StreamResult(new File(resultXmlFolder + "TEST-" + suite_class_name + ".xml"));
             transformer.transform(source, result);
 
             // Output to console for testing
             if (resultXmlFolder != null && !resultXmlFolder.trim().isEmpty()) {
-                System.out.println("File saved to location: " + resultXmlFolder + "TEST-" + SUITE_CLASS_NAME + ".xml");
+                System.out.println("File saved to location: " + resultXmlFolder + "TEST-" + suite_class_name + ".xml");
             } else {
                 if (!resultXmlFolder.trim().isEmpty()) {
-                    System.out.println("File saved to wd: " + "TEST-" + SUITE_CLASS_NAME + ".xml");
+                    System.out.println("File saved to wd: " + "TEST-" + suite_class_name + ".xml");
                 }
             }
             result = new StreamResult(System.out);
@@ -153,7 +188,7 @@ public class App {
 
     private static Element createTestElement(Document doc, TestResult testResult, int testNo, double duration) {
         Element element = doc.createElement("testcase");
-        element.setAttribute("classname", SUITE_CLASS_NAME);
+        element.setAttribute("classname", suite_class_name);
         element.setAttribute("name", "test" + testNo);
         element.setAttribute("time", duration + "");
 
