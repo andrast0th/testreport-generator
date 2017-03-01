@@ -31,47 +31,39 @@ public class App {
         FAILED, PASSED, SKIPPED
     }
 
+    public static class TestConfig {
+        public TestResult testResult;
+        public int        count;
+
+        public TestConfig(TestResult testResult, int count) {
+            this.testResult = testResult;
+            this.count = count;
+        }
+    }
+
     public static void main(String[] args) {
 
         final Options options = new Options();
 
         options
-                .addOption(Option.builder().argName("order").longOpt("order").desc("ex: passed,failed,skipped").hasArg().build())
-
-                .addOption(Option.builder()
-                        .argName("suiteClassName")
-                        .longOpt("suiteClassName")
-                        .desc("ex: com.hpe.junit.testreport.generator.AppTest")
-                        .hasArg().build())
-
-                .addOption(Option.builder()
-                        .argName("failedTestCount")
-                        .longOpt("failedTestCount")
-                        .required()
+                .addOption(Option
+                        .builder()
+                        .argName("execOrder")
+                        .longOpt("execOrder")
+                        .desc("ex: passed:10,failed:32,skipped:12,failed:12")
                         .hasArg()
                         .build())
-
-                .addOption(Option.builder()
-                        .argName("passedTestCount")
-                        .longOpt("passedTestCount")
-                        .required()
-                        .hasArg()
-                        .build())
-
-                .addOption(Option.builder()
-                        .argName("skippedTestCount")
-                        .longOpt("skippedTestCount")
-                        .required()
-                        .hasArg()
-                        .build())
-
                 .addOption(Option.builder()
                         .argName("testDuration")
                         .longOpt("testDuration")
                         .required()
                         .hasArg()
                         .build())
-
+                .addOption(Option.builder()
+                        .argName("suiteClassName")
+                        .longOpt("suiteClassName")
+                        .desc("ex: com.hpe.junit.testreport.generator.AppTest")
+                        .hasArg().build())
                 .addOption(Option.builder().argName("resultXmlFolder")
                         .longOpt("resultXmlFolder")
                         .desc("Make sure to add a / at the end")
@@ -90,31 +82,36 @@ public class App {
             return;
         }
 
-        int failedTestCount = Integer.valueOf(line.getOptionValue("failedTestCount"));
-        int passedTestCount = Integer.valueOf(line.getOptionValue("passedTestCount"));
-        int skippedTestCount = Integer.valueOf(line.getOptionValue("skippedTestCount"));
+        List<TestConfig> execConfig = new ArrayList<>();
+
+        if (line.hasOption("execOrder")) {
+            String paramOrderString = line.getOptionValue("execOrder");
+            String[] separated = paramOrderString.split(",");
+
+            for (String s : separated) {
+                String[] keyValString = s.split(":");
+                if (keyValString.length != 2) {
+                    throw new RuntimeException("Failed to parse execOrderParam");
+                } else {
+                    TestResult testResult = TestResult.valueOf(keyValString[0].toUpperCase());
+                    int count = Integer.parseInt(keyValString[1]);
+                    execConfig.add(new TestConfig(testResult, count));
+                }
+
+            }
+
+        }
+
+        int failedTestCount = getTotalCount(execConfig, TestResult.FAILED);
+        int passedTestCount = getTotalCount(execConfig, TestResult.PASSED);
+        int skippedTestCount = getTotalCount(execConfig, TestResult.SKIPPED);
+
         double testDuration = Double.valueOf(line.getOptionValue("testDuration"));
         double perTestDuration = testDuration / (failedTestCount + passedTestCount);
         String resultXmlFolder = line.getOptionValue("resultXmlFolder", "");
 
         if (line.hasOption("suiteClassName")) {
             suite_class_name = line.getOptionValue("suiteClassName");
-        }
-
-        TestResult[] order;
-
-        if (line.hasOption("order")) {
-            String paramOrderString = line.getOptionValue("order");
-            String[] separated = paramOrderString.split(",");
-
-            List<TestResult> orderList = new ArrayList<>();
-            for (String testResultString : separated) {
-                TestResult testResult = TestResult.valueOf(testResultString.toUpperCase());
-                orderList.add(testResult);
-            }
-            order = orderList.toArray(new TestResult[] {});
-        } else {
-            order = new TestResult[] { TestResult.PASSED, TestResult.FAILED, TestResult.SKIPPED };
         }
 
         try {
@@ -139,21 +136,9 @@ public class App {
 
             Integer testIndex = 1;
 
-            for (TestResult testResult : order) {
-                int count = 0;
-                switch (testResult) {
-                    case PASSED:
-                        count = passedTestCount;
-                        break;
-                    case FAILED:
-                        count = failedTestCount;
-                        break;
-                    case SKIPPED:
-                        count = skippedTestCount;
-                        break;
-                }
-                for (int i = 0; i < count; i++) {
-                    rootElement.appendChild(createTestElement(doc, testResult, testIndex, perTestDuration));
+            for (TestConfig testConfig : execConfig) {
+                for (int i = 1; i <= testConfig.count; i++) {
+                    rootElement.appendChild(createTestElement(doc, testConfig.testResult, testIndex, perTestDuration));
                     testIndex += 1;
                 }
             }
@@ -205,6 +190,16 @@ public class App {
         }
 
         return element;
+    }
+
+    private static int getTotalCount(List<TestConfig> configList, TestResult result) {
+        int total = 0;
+        for (TestConfig config : configList) {
+            if (result == null || config.testResult == result) {
+                total += config.count;
+            }
+        }
+        return total;
     }
 
 }
