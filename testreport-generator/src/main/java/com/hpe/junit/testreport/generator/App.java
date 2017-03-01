@@ -17,6 +17,7 @@ import javax.xml.transform.stream.StreamResult;
 import org.apache.commons.cli.CommandLine;
 import org.apache.commons.cli.CommandLineParser;
 import org.apache.commons.cli.DefaultParser;
+import org.apache.commons.cli.HelpFormatter;
 import org.apache.commons.cli.Option;
 import org.apache.commons.cli.Options;
 import org.apache.commons.cli.ParseException;
@@ -48,14 +49,22 @@ public class App {
         options
                 .addOption(Option
                         .builder()
+                        .argName("help")
+                        .longOpt("help")
+                        .desc("show help")
+                        .build())
+                .addOption(Option
+                        .builder()
                         .argName("execOrder")
                         .longOpt("execOrder")
-                        .desc("ex: passed:10,failed:32,skipped:12,failed:12")
+                        .desc("ex: passed:10,failed:32,skipped:12,failed:12,...")
                         .hasArg()
+                        .required()
                         .build())
                 .addOption(Option.builder()
                         .argName("testDuration")
                         .longOpt("testDuration")
+                        .desc("the duration in ms of all executed test, this will be divided for per/test values")
                         .required()
                         .hasArg()
                         .build())
@@ -66,20 +75,27 @@ public class App {
                         .hasArg().build())
                 .addOption(Option.builder().argName("resultXmlFolder")
                         .longOpt("resultXmlFolder")
-                        .desc("Make sure to add a / at the end")
+                        .desc("ex: c:/filename/ (make sure to add a '/' at the end)")
                         .hasArg()
                         .build());
 
         // create the parser
         CommandLineParser parser = new DefaultParser();
         CommandLine line;
+
         try {
             // parse the command line arguments
             line = parser.parse(options, args);
         } catch (ParseException exp) {
             // oops, something went wrong
             System.err.println("Parsing failed.  Reason: " + exp.getMessage());
+            printHelp(options);
             return;
+        }
+
+        if (line.hasOption("help")) {
+            printHelp(options);
+            System.exit(0);
         }
 
         List<TestConfig> execConfig = new ArrayList<>();
@@ -200,6 +216,12 @@ public class App {
             }
         }
         return total;
+    }
+
+    private static void printHelp(Options options) {
+        HelpFormatter help = new HelpFormatter();
+        help.setWidth(140);
+        help.printHelp("testreport-generator", options);
     }
 
 }
