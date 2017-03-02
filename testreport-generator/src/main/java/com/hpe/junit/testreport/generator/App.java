@@ -49,6 +49,13 @@ public class App {
         options
                 .addOption(Option
                         .builder()
+                        .argName("testNameStartNo")
+                        .longOpt("testNameStartNo")
+                        .desc("testNameStartNo")
+                        .hasArg()
+                        .build())
+                .addOption(Option
+                        .builder()
                         .argName("help")
                         .longOpt("help")
                         .desc("show help")
@@ -130,6 +137,11 @@ public class App {
             suite_class_name = line.getOptionValue("suiteClassName");
         }
 
+        Integer testStartIndex = 1;
+        if (line.hasOption("testNameStartNo")) {
+            testStartIndex = Integer.parseInt(line.getOptionValue("testNameStartNo"));
+        }
+
         try {
 
             DocumentBuilderFactory docFactory = DocumentBuilderFactory.newInstance();
@@ -150,12 +162,10 @@ public class App {
             Element properties = doc.createElement("properties");
             rootElement.appendChild(properties);
 
-            Integer testIndex = 1;
-
             for (TestConfig testConfig : execConfig) {
                 for (int i = 1; i <= testConfig.count; i++) {
-                    rootElement.appendChild(createTestElement(doc, testConfig.testResult, testIndex, perTestDuration));
-                    testIndex += 1;
+                    rootElement.appendChild(createTestElement(doc, testConfig.testResult, testStartIndex, perTestDuration));
+                    testStartIndex += 1;
                 }
             }
 
