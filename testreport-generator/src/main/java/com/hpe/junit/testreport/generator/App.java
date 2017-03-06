@@ -200,7 +200,7 @@ public class App {
     private static Element createTestElement(Document doc, TestResult testResult, int testNo, double duration) {
         Element element = doc.createElement("testcase");
         element.setAttribute("classname", suite_class_name);
-        element.setAttribute("name", "test" + testNo);
+        element.setAttribute("name", "test" + String.format("%05d", testNo));
         element.setAttribute("time", duration + "");
 
         if (TestResult.FAILED == testResult) {
