@@ -3,3 +3,7 @@
 /.project
 /TEST-com.hpe.junit.testreport.generator.AppTest.xml
 /.settings/*
+
+/.idea/*
+*.iml
+*.xml

@@ -1,8 +1,8 @@
 package com.hpe.junit.testreport.generator;
 
-import java.io.File;
-import java.util.ArrayList;
-import java.util.List;
+import org.apache.commons.cli.*;
+import org.w3c.dom.Document;
+import org.w3c.dom.Element;
 
 import javax.xml.parsers.DocumentBuilder;
 import javax.xml.parsers.DocumentBuilderFactory;
@@ -13,22 +13,16 @@ import javax.xml.transform.TransformerException;
 import javax.xml.transform.TransformerFactory;
 import javax.xml.transform.dom.DOMSource;
 import javax.xml.transform.stream.StreamResult;
-
-import org.apache.commons.cli.CommandLine;
-import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.cli.HelpFormatter;
-import org.apache.commons.cli.Option;
-import org.apache.commons.cli.Options;
-import org.apache.commons.cli.ParseException;
-import org.w3c.dom.Document;
-import org.w3c.dom.Element;
+import java.io.File;
+import java.util.ArrayList;
+import java.util.List;
 
 public class App {
 
     public static String suite_class_name = "com.hpe.junit.testreport.generator.AppTest";
+    public static String failedTestException;
 
-    public static enum TestResult {
+    public enum TestResult {
         FAILED, PASSED, SKIPPED
     }
 
@@ -43,6 +37,8 @@ public class App {
     }
 
     public static void main(String[] args) {
+
+        //Assert.fail();
 
         final Options options = new Options();
 
@@ -137,6 +133,11 @@ public class App {
             suite_class_name = line.getOptionValue("suiteClassName");
         }
 
+        failedTestException = "Exception in thread \"main\" java.lang.AssertionError\n" +
+                              "\tat org.junit.Assert.fail(Assert.java:86)\n" +
+                              "\tat org.junit.Assert.fail(Assert.java:95)\n" +
+                              "\t"+suite_class_name+".main(App.java:41)\n";
+
         Integer testStartIndex = 1;
         if (line.hasOption("testNameStartNo")) {
             testStartIndex = Integer.parseInt(line.getOptionValue("testNameStartNo"));
@@ -206,7 +207,7 @@ public class App {
         if (TestResult.FAILED == testResult) {
             Element failure = doc.createElement("failure");
             failure.setAttribute("type", "junit.framework.AssertionFailedError");
-            failure.setTextContent("Assert failed, beacuse it was supposed to");
+            failure.setTextContent(failedTestException);
             element.appendChild(failure);
         }
 
